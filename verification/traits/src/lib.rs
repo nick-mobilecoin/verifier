@@ -72,7 +72,7 @@ impl And {
     ///    fails the `right` will not be attempted.
     /// * `right` - The right, or second, [`VerificationStep`] to perform.
     pub fn new(left: Box<dyn VerificationStep>, right: Box<dyn VerificationStep>) -> Self {
-        Self{ left, right }
+        Self { left, right }
     }
 
     /// The left side of this logical and instance.
@@ -116,7 +116,7 @@ impl Or {
     ///    succeeds the `right` will not be attempted.
     /// * `right` - The right, or second, [`VerificationStep`] to perform.
     pub fn new(left: Box<dyn VerificationStep>, right: Box<dyn VerificationStep>) -> Self {
-        Self{ left, right }
+        Self { left, right }
     }
 
     /// The left side of this logical or instance.
@@ -202,19 +202,16 @@ mod tests {
 
     #[test]
     fn and_succeeds() {
-        let and = And {
-            left: Box::new(AlwaysTrue),
-            right: Box::new(AlwaysTrue),
-        };
+        let and = And::new(Box::new(AlwaysTrue), Box::new(AlwaysTrue));
         assert_eq!(and.verify(), Ok(()));
     }
 
     #[test]
     fn and_short_circuits() {
-        let and = And {
-            left: Box::new(Node::new(false, "First")),
-            right: Box::new(Node::new(true, "Second")),
-        };
+        let and = And::new(
+            Box::new(Node::new(false, "First")),
+            Box::new(Node::new(true, "Second")),
+        );
         assert_eq!(and.verify(), Err(VerificationError::from("First")));
         let right = and
             .right
@@ -226,10 +223,10 @@ mod tests {
 
     #[test]
     fn and_fails_on_tail() {
-        let and = And {
-            left: Box::new(Node::new(true, "First")),
-            right: Box::new(Node::new(false, "Second")),
-        };
+        let and = And::new(
+            Box::new(Node::new(true, "First")),
+            Box::new(Node::new(false, "Second")),
+        );
         assert_eq!(and.verify(), Err(VerificationError::from("Second")));
         let left = and
             .left
@@ -247,10 +244,10 @@ mod tests {
 
     #[test]
     fn or_short_circuits() {
-        let or = Or {
-            left: Box::new(Node::new(true, "First")),
-            right: Box::new(Node::new(false, "Second")),
-        };
+        let or = Or::new(
+            Box::new(Node::new(true, "First")),
+            Box::new(Node::new(false, "Second")),
+        );
         assert_eq!(or.verify(), Ok(()));
         let right = or
             .right()
@@ -262,10 +259,10 @@ mod tests {
 
     #[test]
     fn or_is_true_when_tail_is_true() {
-        let or = Or {
-            left: Box::new(Node::new(false, "First")),
-            right: Box::new(Node::new(true, "Second")),
-        };
+        let or = Or::new(
+            Box::new(Node::new(false, "First")),
+            Box::new(Node::new(true, "Second")),
+        );
         assert_eq!(or.verify(), Ok(()));
         let left = or
             .left()
@@ -277,22 +274,25 @@ mod tests {
 
     #[test]
     fn composing_or_and_and() {
-        let or = Or::new(Box::new(
-            And::new(
+        let or = Or::new(
+            Box::new(And::new(
                 Box::new(Node::new(true, "First")),
-                Box::new(Node::new(false, "Second"))
+                Box::new(Node::new(false, "Second")),
             )),
-            Box::new(Node::new(true, "Third")),);
+            Box::new(Node::new(true, "Third")),
+        );
         assert_eq!(or.verify(), Ok(()));
     }
 
     #[test]
     fn composing_and_and_or() {
-        let and = And::new(Box::new(
-            Or::new(
+        let and = And::new(
+            Box::new(Or::new(
                 Box::new(Node::new(true, "First")),
-                Box::new(Node::new(false, "Second")))),
-            Box::new(Node::new(true, "Third")));
+                Box::new(Node::new(false, "Second")),
+            )),
+            Box::new(Node::new(true, "Third")),
+        );
         assert_eq!(and.verify(), Ok(()));
     }
 }
