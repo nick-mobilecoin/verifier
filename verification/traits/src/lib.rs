@@ -74,6 +74,21 @@ impl VerificationStep for AlwaysFalse {
 mod tests {
     use super::*;
 
+    pub struct Node {
+        pub succeed: bool,
+        pub message: String,
+    }
+
+    impl VerificationStep for Node {
+        fn verify(&self) -> Result<()> {
+            if self.succeed {
+                Ok(())
+            } else {
+                Err(VerificationError::from(self.message.clone()))
+            }
+        }
+    }
+
     #[test]
     fn and_succeeds() {
         let and = And {
@@ -81,6 +96,24 @@ mod tests {
             right: Box::new(AlwaysTrue),
         };
         assert_eq!(and.verify(), Ok(()));
+    }
+
+    #[test]
+    fn and_short_circuits() {
+        let and = And {
+            left: Box::new(Node{ succeed: false, message: "First".to_string()}),
+            right: Box::new(Node{ succeed: true, message: "Second".to_string()}),
+        };
+        assert_eq!(and.verify(), Err(VerificationError::from("First")));
+    }
+
+    #[test]
+    fn and_fails_on_tail() {
+        let and = And {
+            left: Box::new(Node{ succeed: true, message: "First".to_string()}),
+            right: Box::new(Node{ succeed: false, message: "Second".to_string()}),
+        };
+        assert_eq!(and.verify(), Err(VerificationError::from("Second")));
     }
 
     #[test]
