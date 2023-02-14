@@ -142,12 +142,12 @@ mod tests {
     #[test]
     fn and_fails_on_tail() {
         let and = And {
-            left: Box::new(Node::new(false, "First")),
-            right: Box::new(Node::new(true, "Second")),
+            left: Box::new(Node::new(true, "First")),
+            right: Box::new(Node::new(false, "Second")),
         };
+        assert_eq!(and.verify(), Err(VerificationError::from("Second")));
         let left = and.left.as_any().downcast_ref::<Node>().expect("Should be a Node");
         assert_eq!(left.verified_called.get(), true);
-        assert_eq!(and.verify(), Err(VerificationError::from("Second")));
     }
 
     #[test]
