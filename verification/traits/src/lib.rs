@@ -53,7 +53,7 @@ pub struct Or {
 
 impl VerificationStep for Or {
     fn verify(&self) -> Result<()> {
-        self.left.verify().or(self.right.verify())
+        self.left.verify().or_else(|_| self.right.verify())
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -162,14 +162,47 @@ mod tests {
     #[test]
     fn or_short_circuits() {
         let or = Or {
-            left: Box::new(AlwaysTrue),
-            right: Box::new(AlwaysFalse),
+            left: Box::new(Node::new(true, "First")),
+            right: Box::new(Node::new(false, "Second")),
+        };
+        assert_eq!(or.verify(), Ok(()));
+        let right = or.right.as_any().downcast_ref::<Node>().expect("Should be a Node");
+        assert_eq!(right.verified_called.get(), false);
+    }
+
+    #[test]
+    fn or_is_true_when_tail_is_true() {
+        let or = Or {
+            left: Box::new(Node::new(false, "First")),
+            right: Box::new(Node::new(true, "Second")),
+        };
+        assert_eq!(or.verify(), Ok(()));
+        let left = or.left.as_any().downcast_ref::<Node>().expect("Should be a Node");
+        assert_eq!(left.verified_called.get(), true);
+    }
+
+    #[test]
+    fn composing_or_and_and() {
+        let or = Or {
+            left: Box::new(And {
+                left: Box::new(Node::new(true, "First")),
+                right: Box::new(Node::new(false, "Second")),
+            }),
+            right: Box::new(Node::new(true, "Third")),
         };
         assert_eq!(or.verify(), Ok(()));
     }
 
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn composing_and_and_or() {
+        let and = And {
+            left: Box::new(Or {
+                left: Box::new(Node::new(true, "First")),
+                right: Box::new(Node::new(false, "Second")),
+            }),
+            right: Box::new(Node::new(true, "Third")),
+        };
+        assert_eq!(and.verify(), Ok(()));
     }
+
 }
