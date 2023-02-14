@@ -3,8 +3,25 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs, missing_debug_implementations, unsafe_code)]
 
+
+#[derive(Debug, Eq, PartialEq)]
+/// Failed to verify: {0}.
+pub struct VerificationError(String);
+
+impl<S: Into<String>> From<S> for VerificationError {
+    fn from(message: S) -> Self {
+        Self(message.into())
+    }
+}
+
+trait VerificationStep {
+    fn verify(&self) -> Result<(), VerificationError>;
+}
+
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);
