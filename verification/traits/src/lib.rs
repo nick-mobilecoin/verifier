@@ -27,7 +27,7 @@ pub trait VerificationStep {
 
 impl Debug for dyn VerificationStep {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
+        f.debug_struct("VerificationStep").finish()
     }
 }
 
@@ -166,7 +166,7 @@ mod tests {
             .as_any()
             .downcast_ref::<Node>()
             .expect("Should be a Node");
-        assert_eq!(right.verified_called.get(), false);
+        assert!(!right.verified_called.get());
     }
 
     #[test]
@@ -181,7 +181,7 @@ mod tests {
             .as_any()
             .downcast_ref::<Node>()
             .expect("Should be a Node");
-        assert_eq!(left.verified_called.get(), true);
+        assert!(left.verified_called.get());
     }
 
     #[test]
@@ -205,7 +205,7 @@ mod tests {
             .as_any()
             .downcast_ref::<Node>()
             .expect("Should be a Node");
-        assert_eq!(right.verified_called.get(), false);
+        assert!(!right.verified_called.get());
     }
 
     #[test]
@@ -220,7 +220,7 @@ mod tests {
             .as_any()
             .downcast_ref::<Node>()
             .expect("Should be a Node");
-        assert_eq!(left.verified_called.get(), true);
+        assert!(left.verified_called.get());
     }
 
     #[test]
