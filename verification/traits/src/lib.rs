@@ -76,13 +76,13 @@ impl And {
     }
 
     /// The left side of this logical and instance.
-    pub fn left(&self) -> &Box<dyn VerificationStep> {
-        &self.left
+    pub fn left(&self) -> &dyn VerificationStep {
+        &*self.left
     }
 
     /// The right side of this logical and instance.
-    pub fn right(&self) -> &Box<dyn VerificationStep> {
-        &self.right
+    pub fn right(&self) -> &dyn VerificationStep {
+        &*self.right
     }
 }
 
@@ -120,13 +120,13 @@ impl Or {
     }
 
     /// The left side of this logical or instance.
-    pub fn left(&self) -> &Box<dyn VerificationStep> {
-        &self.left
+    pub fn left(&self) -> &dyn VerificationStep {
+        &*self.left
     }
 
     /// The right side of this logical or instance.
-    pub fn right(&self) -> &Box<dyn VerificationStep> {
-        &self.right
+    pub fn right(&self) -> &dyn VerificationStep {
+        &*self.right
     }
 }
 
