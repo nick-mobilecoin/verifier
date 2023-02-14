@@ -18,7 +18,9 @@ impl<S: Into<String>> From<S> for VerificationError {
     }
 }
 
-trait VerificationStep {
+/// A verification step. These can chained together using the [`Or`] and [`And`]
+/// types.
+pub trait VerificationStep {
     fn verify(&self) -> Result<()>;
     fn as_any(&self) -> &dyn Any;
 }
@@ -29,10 +31,21 @@ impl Debug for dyn VerificationStep {
     }
 }
 
+/// Will perform a logical and operation for the [`VerificationStep::verify()`]
+/// operation.
+///
+/// This is will be a short circuiting operation. If the `left` side fails
+/// the `right` side will *not* be exercised.
 #[derive(Debug)]
 pub struct And {
     left: Box<dyn VerificationStep>,
     right: Box<dyn VerificationStep>,
+}
+
+impl And {
+    pub fn new(left: Box<dyn VerificationStep>, right: Box<dyn VerificationStep>) -> Self {
+        Self{ left, right }
+    }
 }
 
 impl VerificationStep for And {
@@ -45,10 +58,21 @@ impl VerificationStep for And {
     }
 }
 
+/// Will perform a logical or operation for the [`VerificationStep::verify()`]
+/// operation.
+///
+/// This is will be a short circuiting operation. If the `left` side succeeds
+/// the `right` side will *not* be exercised.
 #[derive(Debug)]
 pub struct Or {
     left: Box<dyn VerificationStep>,
     right: Box<dyn VerificationStep>,
+}
+
+impl Or {
+    pub fn new(left: Box<dyn VerificationStep>, right: Box<dyn VerificationStep>) -> Self {
+        Self{ left, right }
+    }
 }
 
 impl VerificationStep for Or {
@@ -60,6 +84,7 @@ impl VerificationStep for Or {
     }
 }
 
+/// Will always succeed for the [`VerificationStep::verify()`] operation.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AlwaysTrue;
 
@@ -72,6 +97,7 @@ impl VerificationStep for AlwaysTrue {
     }
 }
 
+/// Will always fail for the [`VerificationStep::verify()`] operation.
 #[derive(Debug, Eq, PartialEq)]
 pub struct AlwaysFalse;
 
@@ -86,8 +112,8 @@ impl VerificationStep for AlwaysFalse {
 
 #[cfg(test)]
 mod tests {
-    use std::cell::Cell;
     use super::*;
+    use std::cell::Cell;
 
     pub struct Node {
         pub succeed: bool,
@@ -135,7 +161,11 @@ mod tests {
             right: Box::new(Node::new(true, "Second")),
         };
         assert_eq!(and.verify(), Err(VerificationError::from("First")));
-        let right = and.right.as_any().downcast_ref::<Node>().expect("Should be a Node");
+        let right = and
+            .right
+            .as_any()
+            .downcast_ref::<Node>()
+            .expect("Should be a Node");
         assert_eq!(right.verified_called.get(), false);
     }
 
@@ -146,7 +176,11 @@ mod tests {
             right: Box::new(Node::new(false, "Second")),
         };
         assert_eq!(and.verify(), Err(VerificationError::from("Second")));
-        let left = and.left.as_any().downcast_ref::<Node>().expect("Should be a Node");
+        let left = and
+            .left
+            .as_any()
+            .downcast_ref::<Node>()
+            .expect("Should be a Node");
         assert_eq!(left.verified_called.get(), true);
     }
 
@@ -166,7 +200,11 @@ mod tests {
             right: Box::new(Node::new(false, "Second")),
         };
         assert_eq!(or.verify(), Ok(()));
-        let right = or.right.as_any().downcast_ref::<Node>().expect("Should be a Node");
+        let right = or
+            .right
+            .as_any()
+            .downcast_ref::<Node>()
+            .expect("Should be a Node");
         assert_eq!(right.verified_called.get(), false);
     }
 
@@ -177,7 +215,11 @@ mod tests {
             right: Box::new(Node::new(true, "Second")),
         };
         assert_eq!(or.verify(), Ok(()));
-        let left = or.left.as_any().downcast_ref::<Node>().expect("Should be a Node");
+        let left = or
+            .left
+            .as_any()
+            .downcast_ref::<Node>()
+            .expect("Should be a Node");
         assert_eq!(left.verified_called.get(), true);
     }
 
@@ -204,5 +246,4 @@ mod tests {
         };
         assert_eq!(and.verify(), Ok(()));
     }
-
 }
